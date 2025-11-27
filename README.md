@@ -42,6 +42,8 @@ A plataforma realiza **avaliações preventivas** e fornece um panorama do estad
 - **Ferramentas recomendadas:**  
   - Visual Studio Code  
   - Extensão SQLite
+
+  ##  **Configurando Ambiente**
   
 ```bash
 ### 1️⃣ Clonar o repositório
