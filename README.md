@@ -43,5 +43,8 @@ A plataforma realiza **avaliações preventivas** e fornece um panorama do estad
   - Visual Studio Code  
   - Extensão SQLite  
 
+### 1️⃣ Clonar o repositório
+```bash
+git clone git@github.com:tiagoarrigoni/ProjetoIntegrador2.git
 
 
