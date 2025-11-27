@@ -41,10 +41,22 @@ A plataforma realiza **avaliações preventivas** e fornece um panorama do estad
 
 - **Ferramentas recomendadas:**  
   - Visual Studio Code  
-  - Extensão SQLite  
-
-### 1️⃣ Clonar o repositório
+  - Extensão SQLite
+  
 ```bash
+### 1️⃣ Clonar o repositório
 git clone git@github.com:tiagoarrigoni/ProjetoIntegrador2.git
 
+
+### 2️⃣ Instalar dependências
+VSCode 
+SQLite Extension
+
+### 3️⃣ Configurar o banco SQLite
+sqlite3 database.db
+
+### 4️⃣ Iniciar o servidor
+npm start
+
+A aplicação ficará disponível em: http://localhost:3000
 
