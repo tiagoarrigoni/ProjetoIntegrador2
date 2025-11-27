@@ -17,7 +17,7 @@ Oferece uma interface simples e intuitiva para acompanhamento do bem-estar.
 
 Serve como ferramenta preventiva para equipes de RH e Saúde Corporativa.
 
-✔ Problema que resolve
+✔** Problema que resolve**
 
 Ajuda empresas a tomarem decisões antecipadas relacionadas ao bem-estar emocional dos colaboradores.
 
@@ -25,7 +25,7 @@ Reduz riscos de afastamentos, burnout e quedas de produtividade.
 
 Auxilia pessoas comuns a acompanharem sua condição emocional regularmente.
 
-✔ Público-alvo
+✔** Público-alvo**
 
 Empresas e corporações.
 
