@@ -55,7 +55,8 @@ git clone git@github.com:tiagoarrigoni/ProjetoIntegrador2.git
 
 ### 2️⃣ Instalar dependências
 VSCode 
-SQLite Extension
+SQLite
+Node.js
 
 ### 3️⃣ Configurar o banco SQLite
 sqlite3 database.db
