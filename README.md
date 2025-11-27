@@ -43,7 +43,7 @@ A plataforma realiza **avaliações preventivas** e fornece um panorama do estad
   - Visual Studio Code  
   - Extensão SQLite
 
-  ##  **Configurando Ambiente**
+  ##  **Configurando o Ambiente**
   
 ```bash
 ### 1️⃣ Clonar o repositório
