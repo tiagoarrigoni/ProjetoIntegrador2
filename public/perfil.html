@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Perfil</title>
+  <link rel="stylesheet" href="assets/css/styleTeste.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+</head>
+
+<body class="teste-theme">
+  <div class="teste-container">
+    <form id="perfilForm" class="teste-form">
+      <h1 class="teste-title">Teste de Perfil Comportamental</h1>
+
+      <!-- Pergunta -->
+      <div id="question-box" class="question-box">
+        <p id="question-text"></p>
+        <div class="options">
+          <label><input type="radio" name="answer" value="1" required> 1 - Discordo totalmente</label>
+          <label><input type="radio" name="answer" value="2"> 2 - Discordo parcialmente</label>
+          <label><input type="radio" name="answer" value="3"> 3 - Neutro</label>
+          <label><input type="radio" name="answer" value="4"> 4 - Concordo</label>
+          <label><input type="radio" name="answer" value="5"> 5 - Concordo totalmente</label>
+        </div>
+      </div>
+
+      <!-- Botões -->
+      <div class="buttons">
+        <button type="button" id="nextBtn" class="next-button">Avançar</button>
+        <button type="submit" id="submitBtn" class="submit-button" style="display:none;">Ver Resultado</button>
+      </div>
+    </form>
+
+    <div id="result" class="teste-result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const questions = [
+      "Costumo assumir a liderança em projetos e decisões.",
+      "Prefiro trabalhar em equipe a trabalhar sozinho.",
+      "Sou uma pessoa organizada e gosto de planejar com antecedência.",
+      "Gosto de desafios e de competir para alcançar objetivos.",
+      "Sou paciente e busco manter o ambiente harmonioso.",
+      "Prefiro estabilidade a mudanças frequentes.",
+      "Gosto de influenciar e motivar outras pessoas.",
+      "Sou detalhista e procuro fazer tudo com perfeição.",
+      "Tomo decisões com base na lógica e na razão.",
+      "Costumo me adaptar facilmente a novas situações.",
+      "Gosto de conversar e expressar minhas ideias.",
+      "Costumo agir com cautela antes de tomar uma decisão."
+    ];
+
+    let currentQuestion = 0;
+    const questionText = document.getElementById("question-text");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const form = document.getElementById("perfilForm"); // ✅ CORRIGIDO
+    const resultDiv = document.getElementById("result");
+    const answers = [];
+
+    // ✅ Verifica se já existe resultado salvo
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const response = await fetch("/get-test?test_type=perfil");
+        const data = await response.json();
+
+        if (data.exists) {
+          form.style.display = "none";
+          resultDiv.innerHTML = `
+          <h2>Resultado do Teste de Perfil</h2>
+          <p>${data.result_text}</p>
+          <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
+        `;
+          resultDiv.style.display = "block";
+        } else {
+          questionText.textContent = questions[currentQuestion];
+        }
+      } catch (err) {
+        console.error("Erro ao verificar teste de perfil:", err);
+        alert("Erro ao verificar se o teste já foi feito.");
+      }
+    });
+
+    // Avança perguntas
+    nextBtn.addEventListener("click", () => {
+      const selected = document.querySelector('input[name="answer"]:checked');
+      if (!selected) {
+        alert("Selecione uma opção antes de avançar!");
+        return;
+      }
+
+      answers.push(parseInt(selected.value));
+      selected.checked = false;
+      currentQuestion++;
+
+      if (currentQuestion < questions.length) {
+        questionText.textContent = questions[currentQuestion];
+      } else {
+        nextBtn.style.display = "none";
+        submitBtn.style.display = "block";
+      }
+    });
+
+    // ✅ Envia e exibe resultado corretamente
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const soma = answers.reduce((a, b) => a + b, 0);
+      const media = soma / questions.length;
+
+      let msg = "";
+      if (media <= 2)
+        msg = "Seu perfil tende a ser mais analítico e reservado. Prefere segurança e previsibilidade.";
+      else if (media <= 3.5)
+        msg = "Você apresenta um perfil equilibrado, adaptando-se bem a diferentes contextos e pessoas.";
+      else
+        msg = "Seu perfil é comunicativo e proativo, gosta de desafios e liderar novas iniciativas.";
+
+      try {
+        const response = await fetch("/save-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            test_type: "perfil",
+            score: soma,
+            result_text: msg
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert(data.message || "Você já fez este teste recentemente.");
+          return (window.location.href = "painel.html");
+        }
+
+        form.style.display = "none";
+        resultDiv.innerHTML = `
+        <h2>Resultado do Teste de Perfil</h2>
+        <p>${msg}</p>
+        <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
+      `;
+        resultDiv.style.display = "block";
+      } catch (error) {
+        console.error("Erro ao enviar resultado:", error);
+        alert("Erro ao enviar o resultado para o servidor.");
+      }
+    });
+  </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+/* ======== Estilo para páginas de testes ======== */
+body.teste-theme {
+  font-family: "Poppins", sans-serif;
+  background-color: #f9f9f9;
+  color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Container principal */
+.teste-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+}
+
+/* Título */
+.teste-title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Pergunta */
+.question-box {
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.question-box p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Opções */
+.options label {
+  display: block;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background 0.3s;
+}
+
+.options input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+.options label:hover {
+  background-color: #f0f0f0;
+}
+
+/* Botões */
+.next-button,
+.submit-button,
+.back-button {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.next-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.next-button:hover {
+  background-color: #0056b3;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.submit-button:hover {
+  background-color: #1e7e34;
+}
+
+.back-button {
+  background-color: #6c757d;
+  color: white;
+  margin-top: 1.5rem;
+}
+
+.back-button:hover {
+  background-color: #495057;
+}
+
+/* Resultado */
+.teste-result h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.teste-result p {
+  font-size: 1rem;
+  color: #555;
+}

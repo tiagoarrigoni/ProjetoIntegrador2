@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Usuário</title>
+  <link rel="stylesheet" href="assets/css/painel.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+</head>
+
+<body>
+
+  <!-- Cabeçalho -->
+  <header class="painel-header">
+    <div class="avatar-wrapper">
+      <img id="user-photo" src="assets/img/avatar1.png" alt="Foto do usuário" onclick="toggleAvatarOptions()">
+
+      <!-- opções de avatar -->
+      <div class="photo-options" id="photo-options">
+        <img src="assets/img/avatar/avatar1.avif" onclick="changeAvatar('avatar1.avif')">
+        <img src="assets/img/avatar/avatar2.avif" onclick="changeAvatar('avatar2.avif')">
+        <img src="assets/img/avatar/avatar3.avif" onclick="changeAvatar('avatar3.avif')">
+      </div>
+    </div>
+
+    <h1>Bem-vindo(a), <strong id="username">USUÁRIO</strong></h1>
+
+    <button class="logout-btn" onclick="logout()">Sair</button>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="painel-main">
+    <div class="action-buttons">
+      <button id="perfil-btn" class="perfil-btn" onclick="goToPerfil()">Perfil Completo</button>
+      <button id="info-btn" class="info-btn" onclick="goToInformacoes()">Informações Pessoais</button>
+    </div>
+
+    <!-- Seção dos testes -->
+    <section class="test-section">
+
+      <div class="test-card" id="stress-card" onclick="goToTest('stress.html')">
+        <img src="assets/img/stress.jpg" alt="Teste de Stress">
+        <h3>Teste de Stress</h3>
+      </div>
+
+      <div class="test-card" id="perfil-card" onclick="goToTest('perfil.html')">
+        <img src="assets/img/perfil.jpg" alt="Teste de Perfil">
+        <h3>Teste de Perfil</h3>
+      </div>
+
+      <div class="test-card" id="humor-card" onclick="goToTest('humor.html')">
+        <img src="assets/img/humor.jpg" alt="Teste de Humor">
+        <h3>Teste de Humor</h3>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="painel-footer">
+    <p>Todos os direitos desse site são reservados a <strong>Tiago Arrigoni</strong></p>
+  </footer>
+
+  <!-- Notificação de sucesso -->
+  <div id="notification"
+    style="display:none; position:fixed; top:16px; right:16px; z-index:9999; padding:12px 16px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); background:#e6ffed; color:#054a22; font-weight:600;">
+    Teste salvo com sucesso!
+  </div>
+
+
+  <script>
+    /*  
+      Mostra / esconde opções de avatar
+    */
+    function toggleAvatarOptions() {
+      const options = document.getElementById("photo-options");
+      options.style.display = options.style.display === "flex" ? "none" : "flex";
+    }
+
+    /*  
+      Troca avatar principal
+    */
+    function changeAvatar(imgName) {
+      const mainPhoto = document.getElementById("user-photo");
+      mainPhoto.src = "assets/img/avatar/" + imgName;
+      document.getElementById("photo-options").style.display = "none";
+    }
+
+    /* Navegação */
+    function goToPerfil() { window.location.href = "resultadoPerfil.html"; }
+    function goToInformacoes() { window.location.href = "informacoes.html"; }
+    function goToTest(page) { window.location.href = page; }
+    function logout() { window.location.href = "index.html"; }
+
+    /*  
+      Carregar nome do usuário e status dos testes
+    */
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        // Nome do usuário logado
+        const userRes = await fetch("/session-user");
+        if (userRes.ok) {
+          const user = await userRes.json();
+          document.getElementById("username").textContent = user.username.toUpperCase();
+        }
+
+        // Testes já realizados
+        const testsRes = await fetch("/my-tests");
+        let completedCount = 0;
+
+        if (testsRes.ok) {
+          const tests = await testsRes.json();
+          tests.forEach(t => {
+            const card = document.getElementById(`${t.test_type}-card`);
+            if (card) {
+              card.classList.add("completed");
+              completedCount++;
+            }
+          });
+        }
+
+        // Se todos os testes estiverem concluídos, muda o botão
+        if (completedCount === 3) {
+          const perfilBtn = document.getElementById("perfil-btn");
+          perfilBtn.classList.add("completed");
+        }
+
+      } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+      }
+
+      /* ========================
+         Mostrar notificação se veio test_saved=1
+      ========================== */
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("test_saved") === "1") {
+        const n = document.getElementById("notification");
+
+        // Mostra o banner
+        n.style.display = "block";
+
+        // Esconde depois de alguns segundos
+        setTimeout(() => {
+          n.style.transition = "opacity 0.6s";
+          n.style.opacity = "0";
+          setTimeout(() => n.remove(), 600);
+        }, 3500);
+
+        // Remove o parâmetro da URL sem recarregar
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    });
+
+  </script>
+</body>
+
+</html>

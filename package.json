@@ -1,0 +1,26 @@
+{
+  "name": "projetointegrador_2",
+  "version": "1.0.0",
+  "description": "Projeto Integrador 2 - Servidor Express com controle de testes psicológicos",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
+    "express": "^5.1.0",
+    "express-session": "^1.17.3",
+    "mysql2": "^3.15.3",
+    "sqlite3": "^5.1.7"
+
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "keywords": [],
+  "author": "Tiago Arrigoni",
+  "license": "ISC"
+}

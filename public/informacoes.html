@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informações Pessoais</title>
+  <link rel="stylesheet" href="assets/css/informacoes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+</head>
+
+<body>
+  <div class="info-container">
+    <h1>Informações Pessoais</h1>
+
+    <form id="infoForm">
+      <div class="form-group">
+        <label for="nome_completo">Nome Completo:</label>
+        <input type="text" id="nome_completo" name="nome_completo" required>
+      </div>
+
+      <div class="form-group">
+        <label for="nascimento">Data de Nascimento:</label>
+        <input type="date" id="nascimento" name="nascimento" required>
+      </div>
+
+      <div class="form-group">
+        <label for="peso">Peso (kg):</label>
+        <input type="number" step="0.1" id="peso" name="peso" required>
+      </div>
+
+      <div class="form-group">
+        <label for="altura">Altura (cm):</label>
+        <input type="number" id="altura" name="altura" required>
+      </div>
+
+      <button type="submit">Salvar Informações</button>
+    </form>
+
+    <p class="mensagem" id="mensagem"></p>
+  </div>
+
+  <button onclick="window.location.href='painel.html'" class="back-btn">Voltar</button>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      const form = document.getElementById("infoForm");
+      const msg = document.getElementById("mensagem");
+
+      const res = await fetch("/user-info");
+      const data = await res.json();
+
+      if (data && data.nome_completo) {
+        // Já existem informações → bloqueia edição
+        form.style.display = "none";
+        msg.innerHTML = `
+          <p class="bloqueado">As informações pessoais já foram preenchidas e não podem ser alteradas.</p>
+        `;
+      }
+    });
+
+    // Envio das informações
+    document.getElementById("infoForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const msg = document.getElementById("mensagem");
+
+      const res = await fetch("/save-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json().catch(() => ({}));
+      msg.textContent = result.message || "Erro ao salvar informações.";
+      msg.style.color = res.ok ? "#4caf50" : "#e74c3c";
+
+      if (res.ok) setTimeout(() => location.reload(), 2000);
+    });
+  </script>
+</body>
+</html>

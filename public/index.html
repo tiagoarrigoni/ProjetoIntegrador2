@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   <!--=============== REMIXICONS ===============-->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
+
+   <!--=============== CSS ===============-->
+   <link rel="stylesheet" href="assets/css/styles.css">
+
+   <title>Login - Bedimcode</title>
+</head>
+
+<body class="login-theme">
+
+   <div class="login">
+
+      <!-- ✅ Formulário com action e names -->
+      <form action="/login" method="POST" class="login__form">
+         <h1 class="login__title">Login</h1>
+
+         <div class="login__inputs">
+            <div class="login__box">
+               <input type="text" name="username" placeholder="Usuário" required class="login__input">
+               <i class="ri-user-fill"></i>
+            </div>
+
+            <div class="login__box">
+               <input type="password" name="password" placeholder="Senha" required class="login__input">
+               <i class="ri-lock-2-fill"></i>
+            </div>
+         </div>
+
+         <button type="submit" class="login__button">Entrar</button>
+
+         <div class="login__register">
+            Não tem uma conta? <a href="register.html">Cadastre-se</a>
+         </div>
+      </form>
+
+   </div>
+
+   <!-- Script que mostra mensagem de sucesso após cadastro e limpa a URL -->
+   <script>
+      (function () {
+         const params = new URLSearchParams(window.location.search);
+
+         // Se veio ?success=1 (após registro), mostramos mensagem e removemos a query string
+         if (params.get("success") === "1") {
+            // Aqui usamos alert simples; se preferir um modal estilizado, eu posso trocar.
+            alert("Cadastro realizado com sucesso!");
+
+            // Remover query string sem recarregar a página
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+         }
+
+      })();
+   </script>
+</body>
+
+</html>

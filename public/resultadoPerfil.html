@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil Completo</title>
+  <link rel="stylesheet" href="assets/css/informacoes.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+</head>
+
+<body>
+  <main class="info-container">
+    <h1>Perfil Completo</h1>
+
+    <section id="perfil-info" class="dados-fixos">
+      <p>Carregando informações pessoais...</p>
+    </section>
+
+    <section id="perfil-resumo" class="dados-fixos">
+      <p>Carregando resultados dos testes...</p>
+    </section>
+
+    <section id="diagnostico" class="dados-fixos">
+      <p>Gerando diagnóstico...</p>
+    </section>
+
+    <button onclick="window.location.href='painel.html'" class="back-btn">Voltar ao Painel</button>
+  </main>
+
+<script>
+window.addEventListener("DOMContentLoaded", async () => {
+  const perfilDiv = document.getElementById("perfil-info");
+  const resumoDiv = document.getElementById("perfil-resumo");
+  const diagDiv = document.getElementById("diagnostico");
+
+  try {
+    const [userInfoRes, testsRes] = await Promise.all([
+      fetch("/user-info"),
+      fetch("/my-tests")
+    ]);
+
+    const userInfo = await userInfoRes.json();
+    const tests = await testsRes.json();
+
+    // ======= INFORMAÇÕES PESSOAIS =======
+    if (userInfo && (userInfo.nome_completo || userInfo.nascimento)) {
+      const idade = userInfo.nascimento
+        ? Math.floor((Date.now() - new Date(userInfo.nascimento)) / (1000 * 60 * 60 * 24 * 365))
+        : "N/A";
+
+      perfilDiv.innerHTML = `
+        <h2>Informações Pessoais</h2>
+        ${userInfo.nome_completo ? `<p><strong>Nome Completo:</strong> ${userInfo.nome_completo}</p>` : ""}
+        ${userInfo.nascimento ? `<p><strong>Data de Nascimento:</strong> ${userInfo.nascimento}</p>` : ""}
+        <p><strong>Idade:</strong> ${idade} anos</p>
+        ${userInfo.peso ? `<p><strong>Peso:</strong> ${userInfo.peso} kg</p>` : ""}
+        ${userInfo.altura ? `<p><strong>Altura:</strong> ${userInfo.altura} cm</p>` : ""}
+      `;
+    } else {
+      perfilDiv.innerHTML = "<p>Informações pessoais não encontradas.</p>";
+    }
+
+    // ======= RESULTADOS DOS TESTES =======
+    if (tests && tests.length > 0) {
+      resumoDiv.innerHTML = `
+        <h2>Resultados dos Testes</h2>
+        ${tests.map(t => `
+          <p><strong>${t.test_type.toUpperCase()}:</strong> ${t.result_text}</p>
+        `).join("")}
+      `;
+    } else {
+      resumoDiv.innerHTML = "<p>Nenhum teste encontrado.</p>";
+    }
+
+    // ======= DIAGNÓSTICO FINAL =======
+    if (tests.length > 0 && userInfo && userInfo.peso) {
+      let soma = 0;
+      tests.forEach(t => soma += t.score);
+      const media = soma / tests.length;
+
+      const idade = userInfo.nascimento
+        ? Math.floor((Date.now() - new Date(userInfo.nascimento)) / (1000 * 60 * 60 * 24 * 365))
+        : 0;
+      const peso = parseFloat(userInfo.peso);
+
+      let diagnostico = "";
+
+      if (media < 25)
+        diagnostico = "Você apresenta excelente equilíbrio emocional e bem-estar geral.";
+      else if (media < 45)
+        diagnostico = "Seu perfil indica um nível moderado de estresse. Cuide de pausas e lazer.";
+      else
+        diagnostico = "Níveis elevados de estresse foram identificados. Busque relaxamento e apoio emocional.";
+
+      // Condições físicas
+      if (peso > 90)
+        diagnostico += " ⚠️ O peso está acima do ideal — recomenda-se atividade física e acompanhamento nutricional.";
+      else if (idade > 45)
+        diagnostico += " 👟 Caminhadas leves e boa alimentação podem melhorar sua qualidade de vida.";
+      else
+        diagnostico += " 💪 Você está com bom equilíbrio físico e emocional.";
+
+      diagDiv.innerHTML = `
+        <h2>Diagnóstico Final</h2>
+        <p>${diagnostico}</p>
+      `;
+    } else {
+      diagDiv.innerHTML = "<p>Complete seus testes e preencha suas informações pessoais para ver o diagnóstico.</p>";
+    }
+
+  } catch (err) {
+    console.error("Erro ao carregar perfil:", err);
+    diagDiv.innerHTML = `<p style="color:red;">Erro ao carregar informações: ${err.message}</p>`;
+  }
+});
+</script>
+
+</body>
+</html>

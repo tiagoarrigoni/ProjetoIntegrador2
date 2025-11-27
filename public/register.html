@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--=============== REMIXICONS ===============-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
+
+    <!--=============== CSS ===============-->
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <title>Cadastro - Bedimcode</title>
+</head>
+
+<body class="register-theme">
+    <div class="login">
+
+        <!-- Formulário de Cadastro -->
+        <form action="/register" method="POST" class="login__form">
+            <h1 class="login__title">Registrar</h1>
+
+            <div class="login__inputs">
+                <div class="login__box">
+                    <input type="text" name="username" placeholder="Usuário" required class="login__input">
+                    <i class="ri-user-fill"></i>
+                </div>
+
+                <div class="login__box">
+                    <input type="email" name="email" placeholder="Email" required class="login__input">
+                    <i class="ri-mail-fill"></i>
+                </div>
+
+                <div class="login__box">
+                    <input type="password" name="password" placeholder="Senha" required class="login__input">
+                    <i class="ri-lock-2-fill"></i>
+                </div>
+
+                <div class="login__box">
+                    <input type="password" name="confirm_password" placeholder="Confirmar Senha" required
+                        class="login__input">
+                    <i class="ri-lock-password-fill"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="login__button">Cadastrar</button>
+
+            <div class="login__register">
+                Já tem uma conta? <a href="index.html">Voltar ao login</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Script de validação de senha -->
+    <script>
+        document.querySelector('.login__form').addEventListener('submit', function (e) {
+            const pass = document.querySelector('input[name="password"]').value;
+            const confirm = document.querySelector('input[name="confirm_password"]').value;
+            if (pass !== confirm) {
+                alert('As senhas não coincidem!');
+                e.preventDefault();
+            }
+        });
+
+
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get("error") === "UsuarioOuEmailExistente") {
+            alert("Usuário ou Email já cadastrado!");
+        }
+
+        if (params.get("error") === "ErroServidor") {
+            alert("Erro interno ao registrar. Tente novamente.");
+        }
+
+
+    </script>
+</body>
+
+</html>
