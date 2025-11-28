@@ -1,65 +1,107 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Bedimcode</title>
 
-   <!--=============== REMIXICONS ===============-->
-   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" crossorigin="">
+  <!-- Remixicons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" />
 
-   <!--=============== CSS ===============-->
-   <link rel="stylesheet" href="assets/css/styles.css">
-
-   <title>Login - Bedimcode</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
-
 <body class="login-theme">
+  <div class="login">
+    <!-- Formulário: envia POST para /auth/login (rota do servidor) -->
+    <form action="/auth/login" method="POST" class="login__form" id="loginForm" novalidate>
+      <h1 class="login__title">Login</h1>
 
-   <div class="login">
+      <div class="login__inputs">
+        <div class="login__box">
+          <!-- label para acessibilidade (visualmente escondido pode ser estilizado via .sr-only) -->
+          <label class="sr-only" for="username">Usuário</label>
+          <input id="username" type="text" name="username" placeholder="Usuário" required class="login__input" />
+          <i class="ri-user-fill" aria-hidden="true"></i>
+        </div>
 
-      <!-- ✅ Formulário com action e names -->
-      <form action="/login" method="POST" class="login__form">
-         <h1 class="login__title">Login</h1>
+        <div class="login__box">
+          <label class="sr-only" for="password">Senha</label>
+          <input id="password" type="password" name="password" placeholder="Senha" required class="login__input" />
+          <i class="ri-lock-2-fill" aria-hidden="true"></i>
+        </div>
+      </div>
 
-         <div class="login__inputs">
-            <div class="login__box">
-               <input type="text" name="username" placeholder="Usuário" required class="login__input">
-               <i class="ri-user-fill"></i>
-            </div>
+      <button type="submit" class="login__button">Entrar</button>
 
-            <div class="login__box">
-               <input type="password" name="password" placeholder="Senha" required class="login__input">
-               <i class="ri-lock-2-fill"></i>
-            </div>
-         </div>
+      <div class="login__register">
+        Não tem uma conta? <a href="register.html">Cadastre-se</a>
+      </div>
+    </form>
+  </div>
 
-         <button type="submit" class="login__button">Entrar</button>
+  <!-- Mensagens rápidas via alert (vêm pelo servidor em query params) -->
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      const success = params.get("success");
+      const logout = params.get("logout");
 
-         <div class="login__register">
-            Não tem uma conta? <a href="register.html">Cadastre-se</a>
-         </div>
-      </form>
+      if (success === "1") {
+        alert("Cadastro realizado com sucesso! Faça login.");
+        // limpa a URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
-   </div>
+      if (logout === "1") {
+        alert("Desconectado com sucesso.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
-   <!-- Script que mostra mensagem de sucesso após cadastro e limpa a URL -->
-   <script>
-      (function () {
-         const params = new URLSearchParams(window.location.search);
+      if (err) {
+        // mapeie os erros que seu servidor pode enviar
+        const map = {
+          "CredenciaisInvalidas": "Usuário ou senha inválidos.",
+          "CamposObrigatorios": "Preencha os campos obrigatórios.",
+          "ErroSessao": "Erro ao criar sessão. Tente novamente.",
+          "ErroServidor": "Erro interno. Tente novamente.",
+          "SenhaCurta": "A senha deve ter ao menos 6 caracteres."
+        };
+        const message = map[err] || "Ocorreu um erro. Tente novamente.";
+        alert(message);
+        // limpa a query string
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
 
-         // Se veio ?success=1 (após registro), mostramos mensagem e removemos a query string
-         if (params.get("success") === "1") {
-            // Aqui usamos alert simples; se preferir um modal estilizado, eu posso trocar.
-            alert("Cadastro realizado com sucesso!");
+      // Extra: impedir envios repetidos rápidos (UX)
+      const form = document.getElementById("loginForm");
+      form.addEventListener("submit", (e) => {
+        const u = document.getElementById("username").value.trim();
+        const p = document.getElementById("password").value;
+        if (!u || !p) {
+          e.preventDefault();
+          alert("Preencha usuário e senha.");
+          return;
+        }
+        // deixa o browser submeter o form normalmente (POST para /auth/login)
+      });
+    })();
+  </script>
 
-            // Remover query string sem recarregar a página
-            const cleanUrl = window.location.origin + window.location.pathname;
-            window.history.replaceState({}, document.title, cleanUrl);
-         }
-
-      })();
-   </script>
+  <style>
+    /* helper class para acessibilidade (esconde visualmente, mantém leitura por screen readers) */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
 </body>
-
 </html>

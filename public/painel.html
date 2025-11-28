@@ -2,31 +2,32 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel do Usuário</title>
-  <link rel="stylesheet" href="assets/css/painel.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+  <link rel="stylesheet" href="assets/css/painel.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" />
 </head>
 
 <body>
-
   <!-- Cabeçalho -->
   <header class="painel-header">
     <div class="avatar-wrapper">
-      <img id="user-photo" src="assets/img/avatar1.png" alt="Foto do usuário" onclick="toggleAvatarOptions()">
+      <img id="user-photo" src="assets/img/avatar1.png" alt="Foto do usuário" onclick="toggleAvatarOptions()" />
 
       <!-- opções de avatar -->
-      <div class="photo-options" id="photo-options">
-        <img src="assets/img/avatar/avatar1.avif" onclick="changeAvatar('avatar1.avif')">
-        <img src="assets/img/avatar/avatar2.avif" onclick="changeAvatar('avatar2.avif')">
-        <img src="assets/img/avatar/avatar3.avif" onclick="changeAvatar('avatar3.avif')">
+      <div class="photo-options" id="photo-options" style="display:none;">
+        <img src="assets/img/avatar/avatar1.avif" onclick="changeAvatar('avatar1.avif')" />
+        <img src="assets/img/avatar/avatar2.avif" onclick="changeAvatar('avatar2.avif')" />
+        <img src="assets/img/avatar/avatar3.avif" onclick="changeAvatar('avatar3.avif')" />
       </div>
     </div>
 
-    <h1>Bem-vindo(a), <strong id="username">USUÁRIO</strong></h1>
+    <h1>
+      Bem-vindo(a), <strong id="username">USUÁRIO</strong>
+    </h1>
 
-    <button class="logout-btn" onclick="logout()">Sair</button>
+    <button class="logout-btn" id="logoutBtn">Sair</button>
   </header>
 
   <!-- Conteúdo principal -->
@@ -38,22 +39,20 @@
 
     <!-- Seção dos testes -->
     <section class="test-section">
-
       <div class="test-card" id="stress-card" onclick="goToTest('stress.html')">
-        <img src="assets/img/stress.jpg" alt="Teste de Stress">
+        <img src="assets/img/stress.jpg" alt="Teste de Stress" />
         <h3>Teste de Stress</h3>
       </div>
 
       <div class="test-card" id="perfil-card" onclick="goToTest('perfil.html')">
-        <img src="assets/img/perfil.jpg" alt="Teste de Perfil">
+        <img src="assets/img/perfil.jpg" alt="Teste de Perfil" />
         <h3>Teste de Perfil</h3>
       </div>
 
       <div class="test-card" id="humor-card" onclick="goToTest('humor.html')">
-        <img src="assets/img/humor.jpg" alt="Teste de Humor">
+        <img src="assets/img/humor.jpg" alt="Teste de Humor" />
         <h3>Teste de Humor</h3>
       </div>
-
     </section>
   </main>
 
@@ -68,92 +67,110 @@
     Teste salvo com sucesso!
   </div>
 
-
   <script>
-    /*  
-      Mostra / esconde opções de avatar
-    */
+    // UI helpers
     function toggleAvatarOptions() {
       const options = document.getElementById("photo-options");
       options.style.display = options.style.display === "flex" ? "none" : "flex";
     }
 
-    /*  
-      Troca avatar principal
-    */
     function changeAvatar(imgName) {
       const mainPhoto = document.getElementById("user-photo");
       mainPhoto.src = "assets/img/avatar/" + imgName;
       document.getElementById("photo-options").style.display = "none";
     }
 
-    /* Navegação */
-    function goToPerfil() { window.location.href = "resultadoPerfil.html"; }
-    function goToInformacoes() { window.location.href = "informacoes.html"; }
-    function goToTest(page) { window.location.href = page; }
-    function logout() { window.location.href = "index.html"; }
+    // Navegação
+    function goToPerfil() {
+      window.location.href = "resultadoPerfil.html";
+    }
+    function goToInformacoes() {
+      window.location.href = "informacoes.html";
+    }
+    function goToTest(page) {
+      window.location.href = page;
+    }
 
-    /*  
-      Carregar nome do usuário e status dos testes
-    */
+    // logout: tenta POST /auth/logout, se falhar redireciona para index
+    async function logout() {
+      try {
+        // tenta rota POST de logout (se existir)
+        await fetch("/auth/logout", { method: "POST", credentials: "include" });
+      } catch (err) {
+        // ignore — apenas redirecionar
+      } finally {
+        window.location.href = "index.html";
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+
+    // Carrega dados do usuário e status dos testes
     window.addEventListener("DOMContentLoaded", async () => {
       try {
-        // Nome do usuário logado
-        const userRes = await fetch("/session-user");
-        if (userRes.ok) {
+        // busca o usuário logado (rota original: /session-user)
+        const userRes = await fetch("/session-user", { credentials: "include" });
+
+        if (!userRes.ok) {
+          // se 401 -> manda pro login
+          if (userRes.status === 401) {
+            window.location.href = "index.html";
+            return;
+          }
+          console.warn("Falha ao obter usuário:", userRes.status);
+        } else {
           const user = await userRes.json();
-          document.getElementById("username").textContent = user.username.toUpperCase();
+          const name = (user.username || "Usuário").toString().toUpperCase();
+          document.getElementById("username").textContent = name;
         }
 
-        // Testes já realizados
-        const testsRes = await fetch("/my-tests");
-        let completedCount = 0;
+        // busca histórico de testes (rota original: /my-tests)
+        const testsRes = await fetch("/my-tests", { credentials: "include" });
 
-        if (testsRes.ok) {
+        if (!testsRes.ok) {
+          if (testsRes.status === 401) {
+            window.location.href = "index.html";
+            return;
+          }
+          console.warn("Falha ao obter testes:", testsRes.status);
+        } else {
           const tests = await testsRes.json();
-          tests.forEach(t => {
+          let completedCount = 0;
+
+          tests.forEach((t) => {
             const card = document.getElementById(`${t.test_type}-card`);
             if (card) {
               card.classList.add("completed");
               completedCount++;
             }
           });
-        }
 
-        // Se todos os testes estiverem concluídos, muda o botão
-        if (completedCount === 3) {
-          const perfilBtn = document.getElementById("perfil-btn");
-          perfilBtn.classList.add("completed");
+          // se todos os testes concluídos, marca botão perfil
+          if (completedCount >= 3) {
+            const perfilBtn = document.getElementById("perfil-btn");
+            if (perfilBtn) perfilBtn.classList.add("completed");
+          }
         }
-
       } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+        console.error("Erro ao carregar dados do painel:", err);
       }
 
-      /* ========================
-         Mostrar notificação se veio test_saved=1
-      ========================== */
-
+      // Notificação: se url contiver test_saved=1
       const params = new URLSearchParams(window.location.search);
-      if (params.get("test_saved") === "1") {
+      if (params.get("test_saved") === "1" || params.get("test_saved") === "true") {
         const n = document.getElementById("notification");
-
-        // Mostra o banner
         n.style.display = "block";
-
-        // Esconde depois de alguns segundos
         setTimeout(() => {
           n.style.transition = "opacity 0.6s";
           n.style.opacity = "0";
           setTimeout(() => n.remove(), 600);
         }, 3500);
 
-        // Remove o parâmetro da URL sem recarregar
+        // limpa parâmetro da url
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
       }
     });
-
   </script>
 </body>
 

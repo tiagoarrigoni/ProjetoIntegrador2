@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste de Perfil</title>
+  <title>Teste de Perfil Comportamental</title>
   <link rel="stylesheet" href="assets/css/styleTeste.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
 </head>
@@ -18,7 +18,7 @@
       <div id="question-box" class="question-box">
         <p id="question-text"></p>
         <div class="options">
-          <label><input type="radio" name="answer" value="1" required> 1 - Discordo totalmente</label>
+          <label><input type="radio" name="answer" value="1"> 1 - Discordo totalmente</label>
           <label><input type="radio" name="answer" value="2"> 2 - Discordo parcialmente</label>
           <label><input type="radio" name="answer" value="3"> 3 - Neutro</label>
           <label><input type="radio" name="answer" value="4"> 4 - Concordo</label>
@@ -37,6 +37,9 @@
   </div>
 
   <script>
+    // =========================
+    // Perguntas / dados
+    // =========================
     const questions = [
       "Costumo assumir a liderança em projetos e decisões.",
       "Prefiro trabalhar em equipe a trabalhar sozinho.",
@@ -53,62 +56,122 @@
     ];
 
     let currentQuestion = 0;
+    const totalQuestions = questions.length;
+    const answers = [];
+
+    // DOM
     const questionText = document.getElementById("question-text");
     const nextBtn = document.getElementById("nextBtn");
     const submitBtn = document.getElementById("submitBtn");
-    const form = document.getElementById("perfilForm"); // ✅ CORRIGIDO
+    const form = document.getElementById("perfilForm");
     const resultDiv = document.getElementById("result");
-    const answers = [];
+    const questionBox = document.getElementById("question-box");
 
-    // ✅ Verifica se já existe resultado salvo
+    // util
+    function showQuestion(index) {
+      questionText.textContent = questions[index];
+    }
+
+    function getSelectedValue() {
+      const selected = document.querySelector('input[name="answer"]:checked');
+      return selected ? parseInt(selected.value, 10) : null;
+    }
+
+    function clearSelected() {
+      const checked = document.querySelector('input[name="answer"]:checked');
+      if (checked) checked.checked = false;
+    }
+
+    // =========================
+    // Inicialização: checa /get-test (usa cookies de sessão)
+    // =========================
     window.addEventListener("DOMContentLoaded", async () => {
       try {
-        const response = await fetch("/get-test?test_type=perfil");
-        const data = await response.json();
+        const resp = await fetch("/get-test?test_type=perfil", {
+          method: "GET",
+          credentials: "include" // envia cookie de sessão
+        });
+
+        console.log("[debug] GET /get-test (perfil) status:", resp.status);
+        const data = await resp.json().catch(() => ({}));
+        console.log("[debug] GET /get-test (perfil) body:", data);
+
+        if (resp.status === 401) {
+          // sessão inválida ou não enviada: manda para login
+          return window.location.href = "/index.html";
+        }
 
         if (data.exists) {
+          // servidor devolveu result_text e created_at (se houver)
           form.style.display = "none";
           resultDiv.innerHTML = `
-          <h2>Resultado do Teste de Perfil</h2>
-          <p>${data.result_text}</p>
-          <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
-        `;
+            <h2>Resultado do Teste de Perfil</h2>
+            <p>${data.result_text || "Você já realizou este teste recentemente. Aguarde 30 dias para refazê-lo."}</p>
+            <p style="font-size:0.9em;opacity:0.8;">Último teste: ${data.created_at || "—"}</p>
+            <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
+          `;
           resultDiv.style.display = "block";
-        } else {
-          questionText.textContent = questions[currentQuestion];
+          return;
         }
+
+        // não existe → iniciar teste
+        showQuestion(currentQuestion);
       } catch (err) {
-        console.error("Erro ao verificar teste de perfil:", err);
+        console.error("Erro ao verificar teste (perfil):", err);
         alert("Erro ao verificar se o teste já foi feito.");
       }
     });
 
-    // Avança perguntas
+    // =========================
+    // Avançar pergunta
+    // =========================
     nextBtn.addEventListener("click", () => {
-      const selected = document.querySelector('input[name="answer"]:checked');
-      if (!selected) {
+      const selectedValue = getSelectedValue();
+      if (selectedValue === null) {
         alert("Selecione uma opção antes de avançar!");
         return;
       }
 
-      answers.push(parseInt(selected.value));
-      selected.checked = false;
+      answers.push(selectedValue);
+      clearSelected();
+
       currentQuestion++;
 
-      if (currentQuestion < questions.length) {
-        questionText.textContent = questions[currentQuestion];
+      if (currentQuestion < totalQuestions) {
+        showQuestion(currentQuestion);
       } else {
+        // terminou
+        questionBox.style.display = "none";
         nextBtn.style.display = "none";
         submitBtn.style.display = "block";
       }
     });
 
-    // ✅ Envia e exibe resultado corretamente
+    // =========================
+    // Envio final
+    // =========================
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      // captura a possível última resposta (caso clicou direto em enviar)
+      if (answers.length < totalQuestions) {
+        const last = getSelectedValue();
+        if (last !== null) answers.push(last);
+      }
+
+      // valida que todas as perguntas foram respondidas
+      if (answers.length < totalQuestions) {
+        alert("Por favor responda todas as perguntas antes de ver o resultado.");
+        questionBox.style.display = "block";
+        nextBtn.style.display = "block";
+        submitBtn.style.display = "none";
+        currentQuestion = answers.length;
+        showQuestion(currentQuestion);
+        return;
+      }
+
       const soma = answers.reduce((a, b) => a + b, 0);
-      const media = soma / questions.length;
+      const media = soma / totalQuestions;
 
       let msg = "";
       if (media <= 2)
@@ -119,8 +182,9 @@
         msg = "Seu perfil é comunicativo e proativo, gosta de desafios e liderar novas iniciativas.";
 
       try {
-        const response = await fetch("/save-test", {
+        const resp = await fetch("/save-test", {
           method: "POST",
+          credentials: "include", // importante: envia cookie de sessão
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             test_type: "perfil",
@@ -129,28 +193,44 @@
           })
         });
 
-        const data = await response.json();
+        console.log("[debug] POST /save-test (perfil) status:", resp.status);
+        const body = await resp.json().catch(() => ({}));
+        console.log("[debug] POST /save-test (perfil) body:", body);
 
-        if (!response.ok) {
-          alert(data.message || "Você já fez este teste recentemente.");
-          return (window.location.href = "painel.html");
+        if (resp.status === 401) {
+          alert("Sessão expirada. Faça login novamente.");
+          return window.location.href = "/index.html";
         }
 
+        if (resp.status === 409) {
+          alert(body.message || "Você já fez este teste nos últimos 30 dias.");
+          return window.location.href = "painel.html";
+        }
+
+        if (!resp.ok) {
+          alert(body.message || "Erro ao salvar o teste.");
+          return window.location.href = "painel.html";
+        }
+
+        // sucesso: mostra resultado e redireciona depois de 1s
         form.style.display = "none";
         resultDiv.innerHTML = `
-        <h2>Resultado do Teste de Perfil</h2>
-        <p>${msg}</p>
-        <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
-      `;
+          <h2>Resultado do Teste de Perfil</h2>
+          <p>${msg}</p>
+          <p style="font-size:0.9em;opacity:0.8;">Você será redirecionado ao painel em instantes...</p>
+        `;
         resultDiv.style.display = "block";
-      } catch (error) {
-        console.error("Erro ao enviar resultado:", error);
+
+        setTimeout(() => {
+          window.location.href = "painel.html?test_saved=1";
+        }, 1000);
+
+      } catch (err) {
+        console.error("Erro ao enviar resultado (perfil):", err);
         alert("Erro ao enviar o resultado para o servidor.");
       }
     });
   </script>
-
-
 </body>
 
 </html>

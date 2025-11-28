@@ -2,154 +2,229 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste de Humor</title>
-    <link rel="stylesheet" href="assets/css/styleTeste.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Humor</title>
+  <link rel="stylesheet" href="assets/css/styleTeste.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
 </head>
 
 <body class="teste-theme">
-    <div class="teste-container">
-        <form id="humorForm" class="teste-form">
-            <h1 class="teste-title">Teste de Humor Diário</h1>
+  <div class="teste-container">
+    <form id="humorForm" class="teste-form">
+      <h1 class="teste-title">Teste de Humor Diário</h1>
 
-            <div id="question-box" class="question-box">
-                <p id="question-text"></p>
-                <div class="options">
-                    <label><input type="radio" name="answer" value="1" required> 1 - Nunca</label>
-                    <label><input type="radio" name="answer" value="2"> 2 - Raramente</label>
-                    <label><input type="radio" name="answer" value="3"> 3 - Às vezes</label>
-                    <label><input type="radio" name="answer" value="4"> 4 - Frequentemente</label>
-                    <label><input type="radio" name="answer" value="5"> 5 - Sempre</label>
-                </div>
-            </div>
+      <div id="question-box" class="question-box">
+        <div id="counter" class="question-counter">Pergunta 1 de 12</div>
+        <p id="question-text"></p>
+        <div class="options">
+          <label><input type="radio" name="answer" value="1"> 1 - Nunca</label>
+          <label><input type="radio" name="answer" value="2"> 2 - Raramente</label>
+          <label><input type="radio" name="answer" value="3"> 3 - Às vezes</label>
+          <label><input type="radio" name="answer" value="4"> 4 - Frequentemente</label>
+          <label><input type="radio" name="answer" value="5"> 5 - Sempre</label>
+        </div>
+      </div>
 
-            <div class="buttons">
-                <button type="button" id="nextBtn" class="next-button">Avançar</button>
-                <button type="submit" id="submitBtn" class="submit-button" style="display:none;">Ver Resultado</button>
-            </div>
-        </form>
+      <div class="buttons">
+        <button type="button" id="nextBtn" class="next-button">Avançar</button>
+        <button type="submit" id="submitBtn" class="submit-button" style="display:none;">Ver Resultado</button>
+      </div>
+    </form>
 
-        <div id="result" class="teste-result" style="display:none;"></div>
-    </div>
+    <div id="result" class="teste-result" style="display:none;"></div>
+  </div>
 
-    <script>
-        const questions = [
-            "Tenho me sentido animado(a) e motivado(a).",
-            "Tenho vontade de interagir com outras pessoas.",
-            "Tenho pensamentos positivos sobre o futuro.",
-            "Tenho rido ou sorrido com facilidade.",
-            "Consigo lidar bem com contratempos.",
-            "Tenho dormido bem e acordado disposto(a).",
-            "Tenho me sentido satisfeito(a) comigo mesmo(a).",
-            "Tenho aproveitado os momentos simples do dia.",
-            "Tenho me sentido em paz e tranquilo(a).",
-            "Tenho conseguido manter a calma sob pressão.",
-            "Tenho praticado algo que me faz feliz.",
-            "Tenho sentido gratidão pelas coisas da vida."
-        ];
+  <script>
+    // perguntas
+    const questions = [
+      "Tenho me sentido animado(a) e motivado(a).",
+      "Tenho vontade de interagir com outras pessoas.",
+      "Tenho pensamentos positivos sobre o futuro.",
+      "Tenho rido ou sorrido com facilidade.",
+      "Consigo lidar bem com contratempos.",
+      "Tenho dormido bem e acordado disposto(a).",
+      "Tenho me sentido satisfeito(a) comigo mesmo(a).",
+      "Tenho aproveitado os momentos simples do dia.",
+      "Tenho me sentido em paz e tranquilo(a).",
+      "Tenho conseguido manter a calma sob pressão.",
+      "Tenho praticado algo que me faz feliz.",
+      "Tenho sentido gratidão pelas coisas da vida."
+    ];
 
-        let currentQuestion = 0;
-        const questionText = document.getElementById("question-text");
-        const nextBtn = document.getElementById("nextBtn");
-        const submitBtn = document.getElementById("submitBtn");
-        const form = document.getElementById("humorForm");
-        const resultDiv = document.getElementById("result");
-        const answers = [];
+    // estado
+    let currentQuestion = 0;
+    const totalQuestions = questions.length;
+    const answers = [];
 
-        // 👇 NOVO: verifica se o teste já foi feito antes
-        window.addEventListener("DOMContentLoaded", async () => {
-            try {
-                const response = await fetch("/get-test?test_type=humor");
-                const data = await response.json();
+    // DOM
+    const questionText = document.getElementById("question-text");
+    const counterDiv = document.getElementById("counter");
+    const nextBtn = document.getElementById("nextBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const form = document.getElementById("humorForm");
+    const resultDiv = document.getElementById("result");
+    const questionBox = document.getElementById("question-box");
 
-                if (data.exists) {
-                    // Se já existe um resultado recente, mostra direto
-                    form.style.display = "none";
-                    resultDiv.innerHTML = `
-                    <h2>Resultado do Teste de Humor</h2>
-                    <p>${data.result_text}</p>
-                    <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
-                `;
-                    resultDiv.style.display = "block";
-                } else {
-                    // Caso contrário, começa o teste normalmente
-                    questionText.textContent = questions[currentQuestion];
-                }
-            } catch (err) {
-                console.error("Erro ao verificar teste de humor:", err);
-                alert("Erro ao verificar se o teste já foi feito.");
-            }
+    // util
+    function updateCounter() {
+      counterDiv.textContent = `Pergunta ${Math.min(currentQuestion + 1, totalQuestions)} de ${totalQuestions}`;
+    }
+
+    function showQuestion(index) {
+      questionText.textContent = questions[index];
+      updateCounter();
+    }
+
+    function getSelectedValue() {
+      const sel = document.querySelector('input[name="answer"]:checked');
+      return sel ? parseInt(sel.value, 10) : null;
+    }
+
+    function clearSelected() {
+      const sel = document.querySelector('input[name="answer"]:checked');
+      if (sel) sel.checked = false;
+    }
+
+    // Inicialização: checa se já fez nos últimos 30 dias (usa cookie de sessão)
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const resp = await fetch("/get-test?test_type=humor", {
+          method: "GET",
+          credentials: "include" // envia cookie de sessão
         });
 
-        // Avança as perguntas
-        nextBtn.addEventListener("click", () => {
-            const selected = document.querySelector('input[name="answer"]:checked');
-            if (!selected) {
-                alert("Selecione uma opção antes de avançar!");
-                return;
-            }
+        console.log("[debug] GET /get-test (humor) status:", resp.status);
+        const data = await resp.json().catch(() => ({}));
+        console.log("[debug] GET /get-test (humor) body:", data);
 
-            answers.push(parseInt(selected.value));
-            selected.checked = false;
-            currentQuestion++;
+        if (resp.status === 401) {
+          // sessão inválida ou cookie não enviado
+          return window.location.href = "/index.html";
+        }
 
-            if (currentQuestion < questions.length) {
-                questionText.textContent = questions[currentQuestion];
-            } else {
-                nextBtn.style.display = "none";
-                submitBtn.style.display = "block";
-            }
+        if (data.exists) {
+          // mostra result_text retornado pelo servidor (server.js foi ajustado para enviar)
+          form.style.display = "none";
+          resultDiv.innerHTML = `
+            <h2>Resultado do Teste de Humor</h2>
+            <p>${data.result_text || "Você já realizou este teste recentemente. Aguarde 30 dias para refazê-lo."}</p>
+            <p style="font-size:0.9em;opacity:0.8;">Último teste: ${data.created_at || "—"}</p>
+            <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
+          `;
+          resultDiv.style.display = "block";
+          return;
+        }
+
+        // não existe → começar
+        showQuestion(currentQuestion);
+      } catch (err) {
+        console.error("Erro ao verificar teste de humor:", err);
+        alert("Erro ao verificar se o teste já foi feito.");
+      }
+    });
+
+    // avançar
+    nextBtn.addEventListener("click", () => {
+      const selected = getSelectedValue();
+      if (selected === null) {
+        alert("Selecione uma opção antes de avançar!");
+        return;
+      }
+
+      answers.push(selected);
+      clearSelected();
+
+      currentQuestion++;
+
+      if (currentQuestion < totalQuestions) {
+        showQuestion(currentQuestion);
+      } else {
+        questionBox.style.display = "none";
+        nextBtn.style.display = "none";
+        submitBtn.style.display = "block";
+      }
+    });
+
+    // submissão
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // captura última resposta se necessário
+      if (answers.length < totalQuestions) {
+        const last = getSelectedValue();
+        if (last !== null) answers.push(last);
+      }
+
+      // valida
+      if (answers.length < totalQuestions) {
+        alert("Por favor responda todas as perguntas antes de ver o resultado.");
+        questionBox.style.display = "block";
+        nextBtn.style.display = "block";
+        submitBtn.style.display = "none";
+        currentQuestion = answers.length;
+        showQuestion(currentQuestion);
+        return;
+      }
+
+      const soma = answers.reduce((a, b) => a + b, 0);
+      const media = soma / totalQuestions;
+
+      let msg = "";
+      if (media <= 2) msg = "Seu humor está baixo. Procure atividades que tragam alegria e relaxamento.";
+      else if (media <= 3.5) msg = "Seu humor está moderado. Há um bom equilíbrio, mas cuide de si mesmo.";
+      else msg = "Seu humor está ótimo! Continue mantendo hábitos positivos e saudáveis.";
+
+      try {
+        const resp = await fetch("/save-test", {
+          method: "POST",
+          credentials: "include", // importante: envia cookie de sessão
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            test_type: "humor",
+            score: soma,
+            result_text: msg
+          })
         });
 
-        // Envia o resultado ao servidor
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        console.log("[debug] POST /save-test (humor) status:", resp.status);
+        const body = await resp.json().catch(() => ({}));
+        console.log("[debug] POST /save-test (humor) body:", body);
 
-            const soma = answers.reduce((a, b) => a + b, 0);
-            const media = soma / questions.length;
+        if (resp.status === 401) {
+          alert("Sessão expirada. Faça login novamente.");
+          return window.location.href = "/index.html";
+        }
 
-            let msg = "";
-            if (media <= 2)
-                msg = "Seu humor está baixo. Procure atividades que tragam alegria e relaxamento.";
-            else if (media <= 3.5)
-                msg = "Seu humor está moderado. Há um bom equilíbrio, mas cuide de si mesmo.";
-            else
-                msg = "Seu humor está ótimo! Continue mantendo hábitos positivos e saudáveis.";
+        if (resp.status === 409) {
+          alert(body.message || "Você já fez este teste nos últimos 30 dias.");
+          return window.location.href = "painel.html";
+        }
 
-            try {
-                const response = await fetch("/save-test", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        test_type: "humor",
-                        score: soma,
-                        result_text: msg
-                    })
-                });
+        if (!resp.ok) {
+          alert(body.message || "Erro ao salvar o teste.");
+          return window.location.href = "painel.html";
+        }
 
-                const data = await response.json();
+        // sucesso: mostra resultado e redireciona
+        form.style.display = "none";
+        resultDiv.innerHTML = `
+          <h2>Resultado do Teste de Humor</h2>
+          <p>${msg}</p>
+          <p style="font-size:0.9em;opacity:0.8;">Você será redirecionado ao painel em instantes...</p>
+        `;
+        resultDiv.style.display = "block";
 
-                if (!response.ok) {
-                    alert(data.message || "Você já fez este teste recentemente.");
-                    return (window.location.href = "painel.html");
-                }
+        setTimeout(() => {
+          window.location.href = "painel.html?test_saved=1";
+        }, 1000);
 
-                form.style.display = "none";
-                resultDiv.innerHTML = `
-                <h2>Resultado do Teste de Humor</h2>
-                <p>${msg}</p>
-                <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
-            `;
-                resultDiv.style.display = "block";
-            } catch (error) {
-                console.error("Erro ao enviar resultado:", error);
-                alert("Erro ao enviar o resultado para o servidor.");
-            }
-        });
-    </script>
-
+      } catch (err) {
+        console.error("Erro ao enviar resultado (humor):", err);
+        alert("Erro ao enviar o resultado para o servidor.");
+      }
+    });
+  </script>
 </body>
 
 </html>

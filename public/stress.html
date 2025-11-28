@@ -2,11 +2,11 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teste de Stress</title>
-  <link rel="stylesheet" href="assets/css/styleTeste.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css" />
+  <link rel="stylesheet" href="assets/css/styleTeste.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/3.5.0/remixicon.css">
 </head>
 
 <body class="teste-theme">
@@ -22,7 +22,7 @@
 
         <!-- Opções de resposta (radio buttons) -->
         <div class="options">
-          <label><input type="radio" name="answer" value="1" required> 1 - Nunca</label>
+          <label><input type="radio" name="answer" value="1"> 1 - Nunca</label>
           <label><input type="radio" name="answer" value="2"> 2 - Raramente</label>
           <label><input type="radio" name="answer" value="3"> 3 - Às vezes</label>
           <label><input type="radio" name="answer" value="4"> 4 - Frequentemente</label>
@@ -45,7 +45,6 @@
     // =========================
     // Configurações / dados
     // =========================
-    // Lista de perguntas do teste
     const questions = [
       "Costumo me sentir sobrecarregado com minhas tarefas.",
       "Tenho dificuldades para relaxar mesmo após o trabalho.",
@@ -61,12 +60,11 @@
       "Tenho dificuldade em “desligar” da rotina mesmo nos fins de semana."
     ];
 
-    // Estado do fluxo do teste
     let currentQuestion = 0;
     const totalQuestions = questions.length;
-    const answers = []; // armazena os valores selecionados (1..5)
+    const answers = [];
 
-    // Elementos do DOM que usaremos
+    // DOM
     const questionText = document.getElementById("question-text");
     const nextBtn = document.getElementById("nextBtn");
     const submitBtn = document.getElementById("submitBtn");
@@ -75,59 +73,68 @@
     const questionBox = document.getElementById("question-box");
     const counterDiv = document.getElementById("counter");
 
-    // =========================
-    // Funções utilitárias
-    // =========================
-
-    // Atualiza o contador visual "Pergunta X de Y"
+    // util
     function updateCounter() {
       counterDiv.textContent = `Pergunta ${Math.min(currentQuestion + 1, totalQuestions)} de ${totalQuestions}`;
     }
 
-    // Exibe a pergunta de índice `index`
     function showQuestion(index) {
       questionText.textContent = questions[index];
       updateCounter();
     }
 
-    // Retorna o valor selecionado atualmente (ou null se nada selecionado)
     function getSelectedValue() {
       const selected = document.querySelector('input[name="answer"]:checked');
       return selected ? parseInt(selected.value, 10) : null;
     }
 
+    function clearSelected() {
+      const checked = document.querySelector('input[name="answer"]:checked');
+      if (checked) checked.checked = false;
+    }
+
     // =========================
-    // Verifica se já existe resultado do teste (no carregamento)
+    // Inicialização: checa /get-test (usa cookies de sessão)
     // =========================
     window.addEventListener("DOMContentLoaded", async () => {
       try {
-        // Chama o endpoint /get-test?test_type=stress
-        // O backend deve retornar { exists: true } se o usuário já fez nos últimos 30 dias
-        const response = await fetch("/get-test?test_type=stress");
-        const data = await response.json();
+        const resp = await fetch("/get-test?test_type=stress", {
+          method: "GET",
+          credentials: "include" // envia cookie de sessão
+        });
+
+        console.log("[debug] GET /get-test status:", resp.status);
+        const data = await resp.json().catch(() => ({}));
+        console.log("[debug] GET /get-test body:", data);
+
+        if (resp.status === 401) {
+          // sessão inválida ou não enviada: manda para login
+          return window.location.href = "/index.html";
+        }
 
         if (data.exists) {
-          // Se já fez o teste nos últimos 30 dias, mostramos mensagem fixa
+          // servidor já retornou result_text e created_at (se existir)
           form.style.display = "none";
           resultDiv.innerHTML = `
-            <h2>O teste já foi realizado!</h2>
-            <p>Aguarde 30 dias para refazê-lo.</p>
+            <h2>Resultado do Teste de Stress</h2>
+            <p>${data.result_text || "Você já realizou este teste recentemente. Aguarde 30 dias para refazê-lo."}</p>
+            <p style="font-size:0.9em;opacity:0.8;">Último teste: ${data.created_at || "—"}</p>
             <button onclick="location.href='painel.html'" class="back-button">Voltar ao Painel</button>
           `;
           resultDiv.style.display = "block";
-        } else {
-          // Caso não exista resultado recente, iniciamos o teste mostrando a primeira pergunta
-          showQuestion(currentQuestion);
+          return;
         }
+
+        // não existe → iniciar teste
+        showQuestion(currentQuestion);
       } catch (err) {
-        // Em caso de erro de rede ou servidor, logamos e avisamos o usuário
         console.error("Erro ao verificar teste:", err);
         alert("Erro ao verificar se o teste já foi feito.");
       }
     });
 
     // =========================
-    // Navegação: Avançar pergunta
+    // Avançar
     // =========================
     nextBtn.addEventListener("click", () => {
       const selectedValue = getSelectedValue();
@@ -136,21 +143,15 @@
         return;
       }
 
-      // Salva a resposta atual
       answers.push(selectedValue);
+      clearSelected();
 
-      // Limpa seleção atual para a próxima pergunta
-      const selectedInput = document.querySelector('input[name="answer"]:checked');
-      if (selectedInput) selectedInput.checked = false;
-
-      // Avança o índice da pergunta
       currentQuestion++;
 
       if (currentQuestion < totalQuestions) {
-        // Mostra a próxima pergunta
         showQuestion(currentQuestion);
       } else {
-        // Se respondeu todas, escondemos as perguntas e mostramos o botão de enviar
+        // terminou
         questionBox.style.display = "none";
         nextBtn.style.display = "none";
         submitBtn.style.display = "block";
@@ -158,19 +159,18 @@
     });
 
     // =========================
-    // Envio: Finalizar e salvar o teste
+    // Envio final
     // =========================
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      // Se o usuário clicou direto em "Ver Resultado" sem clicar em Avançar,
-      // tentamos pegar a resposta da última pergunta exibida.
+      // captura a possível última resposta (caso clicou direto em enviar)
       if (answers.length < totalQuestions) {
-        const lastSelected = getSelectedValue();
-        if (lastSelected !== null) answers.push(lastSelected);
+        const last = getSelectedValue();
+        if (last !== null) answers.push(last);
       }
 
-      // Se ainda houver perguntas sem resposta, mostramos alerta e voltamos para completar
+      // valida que todas as perguntas foram respondidas
       if (answers.length < totalQuestions) {
         alert("Por favor responda todas as perguntas antes de ver o resultado.");
         questionBox.style.display = "block";
@@ -181,20 +181,18 @@
         return;
       }
 
-      // Calcula soma e média das respostas
       const soma = answers.reduce((a, b) => a + b, 0);
       const media = soma / totalQuestions;
 
-      // Define a mensagem com base na média
       let msg = "";
       if (media <= 2) msg = "Seu nível de stress está baixo. Você demonstra equilíbrio e boa gestão emocional.";
       else if (media <= 3.5) msg = "Nível moderado de stress. Tente desacelerar e cuidar da sua rotina.";
       else msg = "Alto nível de stress. Considere técnicas de relaxamento e, se necessário, apoio profissional.";
 
       try {
-        // Envia resultado para o servidor
-        const response = await fetch("/save-test", {
+        const resp = await fetch("/save-test", {
           method: "POST",
+          credentials: "include", // importante: envia cookie de sessão
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             test_type: "stress",
@@ -203,27 +201,45 @@
           })
         });
 
-        // tenta ler JSON de resposta (se houver)
-        let data = {};
-        try { data = await response.json(); } catch (e) { /* ignora se sem json */ }
+        console.log("[debug] POST /save-test status:", resp.status);
+        const body = await resp.json().catch(() => ({}));
+        console.log("[debug] POST /save-test body:", body);
 
-        if (!response.ok) {
-          // Se o servidor retornou erro (por exemplo: já feito nos últimos 30 dias), mostramos a mensagem e retornamos ao painel
-          alert(data.message || "Você já fez este teste nos últimos 30 dias.");
-          window.location.href = "painel.html";
-          return;
+        if (resp.status === 401) {
+          alert("Sessão expirada. Faça login novamente.");
+          return window.location.href = "/index.html";
         }
 
-        // Sucesso: redireciona para o painel do usuário e adiciona query string opcional
-        window.location.href = "painel.html?test_saved=1";
+        if (resp.status === 409) {
+          alert(body.message || "Você já fez este teste nos últimos 30 dias.");
+          return window.location.href = "painel.html";
+        }
 
-      } catch (error) {
-        // Em caso de erro de rede, notifica o usuário
-        console.error("Erro ao salvar resultado:", error);
+        if (!resp.ok) {
+          alert(body.message || "Erro ao salvar o teste.");
+          return window.location.href = "painel.html";
+        }
+
+        // sucesso: mostra resultado e redireciona depois de 1s
+        form.style.display = "none";
+        resultDiv.innerHTML = `
+          <h2>Resultado do Teste de Stress</h2>
+          <p>${msg}</p>
+          <p style="font-size:0.9em;opacity:0.8;">Você será redirecionado ao painel em instantes...</p>
+        `;
+        resultDiv.style.display = "block";
+
+        setTimeout(() => {
+          window.location.href = "painel.html?test_saved=1";
+        }, 1000);
+
+      } catch (err) {
+        console.error("Erro ao enviar resultado:", err);
         alert("Erro ao enviar o resultado para o servidor.");
       }
     });
   </script>
+
 </body>
 
 </html>
