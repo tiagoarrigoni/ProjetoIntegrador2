@@ -1,6 +1,9 @@
 # 🧠 Bem Estar Social  
 Sistema Web para Avaliação Preventiva da Saúde Mental
 
+# Apresentação do Projeto em vídeo
+https://youtu.be/2X_bJ0feeow
+
 ---
 
 ## 📌 **Descrição Geral**
@@ -52,7 +55,8 @@ git clone git@github.com:tiagoarrigoni/ProjetoIntegrador2.git
 
 ### 2️⃣ Instalar dependências
 VSCode 
-SQLite Extension
+SQLite
+Node.js
 
 ### 3️⃣ Configurar o banco SQLite
 sqlite3 database.db
